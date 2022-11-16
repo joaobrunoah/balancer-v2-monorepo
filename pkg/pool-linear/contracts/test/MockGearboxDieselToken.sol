@@ -18,7 +18,7 @@ import "@balancer-labs/v2-interfaces/contracts/pool-linear/IGearboxDieselToken.s
 
 import "@balancer-labs/v2-solidity-utils/contracts/test/TestToken.sol";
 
-contract MockStaticAToken is TestToken, IGearboxDieselToken {
+contract MockGearboxDieselToken is TestToken, IGearboxDieselToken {
     uint256 private _rate = 1e27;
     address private immutable _ASSET;
 

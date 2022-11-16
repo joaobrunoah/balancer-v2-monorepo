@@ -20,7 +20,8 @@ describe('GearboxLinearPool', function () {
   let pool: LinearPool, tokens: TokenList, mainToken: Token;
   let poolFactory: Contract;
   let trader: SignerWithAddress, lp: SignerWithAddress, owner: SignerWithAddress;
-  let wrappedToken: Contract;
+  let wrappedToken: Token;
+  let wrappedTokenInstance: Contract;
 
   const POOL_SWAP_FEE_PERCENTAGE = fp(0.01);
 
@@ -30,7 +31,8 @@ describe('GearboxLinearPool', function () {
 
   sharedBeforeEach('deploy tokens', async () => {
     mainToken = await Token.create('USDC');
-    wrappedToken = await deploy('MockGearboxDieselToken', { args: ['dUSDC', 'dUSDC', 18, mainToken.address] });
+    wrappedTokenInstance = await deploy('MockGearboxDieselToken', { args: ['dUSDC', 'dUSDC', 18, mainToken.address] });
+    wrappedToken = await Token.deployedAt(wrappedTokenInstance.address);
 
     tokens = new TokenList([mainToken, wrappedToken]).sort();
 
@@ -83,11 +85,11 @@ describe('GearboxLinearPool', function () {
     it('returns the expected value', async () => {
       // Reserve's normalised income is stored with 27 decimals (i.e. a 'ray' value)
       // 1e27 implies a 1:1 exchange rate between main and wrapped token
-      await wrappedToken.setRate(bn(1e27));
+      await wrappedTokenInstance.setRate(bn(1e27));
       expect(await pool.getWrappedTokenRate()).to.be.eq(fp(1));
 
       // We now double the reserve's normalised income to change the exchange rate to 2:1
-      await wrappedToken.setRate(bn(2e27));
+      await wrappedTokenInstance.setRate(bn(2e27));
       expect(await pool.getWrappedTokenRate()).to.be.eq(fp(2));
     });
   });
