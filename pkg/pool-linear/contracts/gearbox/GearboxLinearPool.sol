@@ -67,14 +67,12 @@ contract GearboxLinearPool is LinearPool {
     }
 
     function _getWrappedTokenRate() internal view override returns (uint256) {
-        // TODO Refactor this comment
-        // This pulls in the implementation of `rate` used in the StaticAToken contract
-        // except avoiding storing relevant variables in storage for gas reasons.
-        // solhint-disable-next-line max-line-length
-        // see: https://github.com/aave/protocol-v2/blob/ac58fea62bb8afee23f66197e8bce6d79ecda292/contracts/protocol/tokenization/StaticATokenLM.sol#L255-L257
+        // see: https://etherscan.io/address/0x86130bDD69143D8a4E5fc50bf4323D48049E98E4#readContract#F18
+        // The getDieselRate_RAY function doesn't appear on gearbox docs, but is easy to find in etherscan.io
+        // For updated list of pools and tokens, please check:
+        // https://dev.gearbox.fi/docs/documentation/deployments/deployed-contracts
         try _gearboxVault.getDieselRate_RAY() returns (uint256 rate) {
-            // TODO Refactor this comment
-            // This function returns a 18 decimal fixed point number, but `rate` has 27 decimals (i.e. a 'ray' value)
+            // This function returns a 18 decimal fixed point number, but `getDieselRate_RAY` has 27 decimals (i.e. a 'ray' value)
             // so we need to convert it.
             return rate / 10**9;
         } catch (bytes memory revertData) {

@@ -52,13 +52,15 @@ contract GearboxLinearPoolRebalancer is LinearPoolRebalancer {
     }
 
     function _getRequiredTokensToWrap(uint256 wrappedAmount) internal view override returns (uint256) {
-        // TODO refactor comment
-        // staticToDynamic returns how many main tokens will be returned when unwrapping. Since there's fixed point
-        // divisions and multiplications with rounding involved, this value might be off by one. We add one to ensure
-        // the returned value will always be enough to get `wrappedAmount` when unwrapping. This might result in some
-        // dust being left in the Rebalancer.
         IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
+        // see: https://etherscan.io/address/0x86130bDD69143D8a4E5fc50bf4323D48049E98E4#readContract#F18
+        // The getDieselRate_RAY function doesn't appear on gearbox docs, but is easy to find in etherscan.io
+        // For updated list of pools and tokens, please check:
+        // https://dev.gearbox.fi/docs/documentation/deployments/deployed-contracts
         uint256 rate = gearboxVault.getDieselRate_RAY();
+        // Since there's fixed point divisions and multiplications with rounding involved, this value might
+        // be off by one. We add one to ensure the returned value will always be enough to get `wrappedAmount`
+        // when unwrapping. This might result in some dust being left in the Rebalancer.
         return (wrappedAmount.mulDown(rate) / 10**9) + 1;
     }
 
