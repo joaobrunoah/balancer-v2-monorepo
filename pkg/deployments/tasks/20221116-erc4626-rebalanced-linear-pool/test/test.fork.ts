@@ -11,7 +11,7 @@ import { MAX_UINT256 } from '@balancer-labs/v2-helpers/src/constants';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { SwapKind } from '@balancer-labs/balancer-js';
 
-describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 15225000, function () {
+describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
   let owner: SignerWithAddress, holder: SignerWithAddress, other: SignerWithAddress;
   let factory: Contract, vault: Contract, usdc: Contract;
   let rebalancer: Contract;

@@ -19,8 +19,6 @@ import "../math/Math.sol";
 import "../openzeppelin/ERC20.sol";
 import "./InputHelpers.sol";
 
-import "hardhat/console.sol";
-
 // solhint-disable
 
 // To simplify Pool logic, all token balances and amounts are normalized to behave as if the token had 18 decimals.
@@ -100,17 +98,9 @@ function _downscaleUpArray(uint256[] memory amounts, uint256[] memory scalingFac
 
 function _computeScalingFactor(IERC20 token) view returns (uint256) {
     // Tokens that don't implement the `decimals` method are not supported.
-    console.log('compute scaling factors');
-    console.log('address token: ', address(token));
-    ERC20 token2 = ERC20(address(token));
-    console.log('here bla bla');
-    console.log('balance: ', token2.balanceOf(0xa1F8A6807c402E4A15ef4EBa36528A3FED24E577));
-    console.log('decimals: ', token2.decimals());
     uint256 tokenDecimals = ERC20(address(token)).decimals();
 
     // Tokens with more than 18 decimals are not supported.
     uint256 decimalsDifference = Math.sub(18, tokenDecimals);
-    console.log('decimalsDifference: ', decimalsDifference);
-    console.log('scalingFactor: ', FixedPoint.ONE * 10**decimalsDifference);
     return FixedPoint.ONE * 10**decimalsDifference;
 }

@@ -22,8 +22,6 @@ import "@balancer-labs/v2-solidity-utils/contracts/math/Math.sol";
 
 import "../LinearPool.sol";
 
-import "hardhat/console.sol";
-
 contract ERC4626LinearPool is LinearPool {
     using Math for uint256;
 
@@ -75,11 +73,7 @@ contract ERC4626LinearPool is LinearPool {
         // the pool is still valid.
 
         // Check if maintoken and wrappedToken asset matches
-        console.log('Main token address: ', address(args.mainToken));
-        console.log('Wrapped token\'s asset address: ', IERC4626(address(args.wrappedToken)).asset());
         _require(address(args.mainToken) == IERC4626(address(args.wrappedToken)).asset(), Errors.TOKENS_MISMATCH);
-        console.log('2. Main token address: ', address(args.mainToken));
-        console.log('2. Wrapped token\'s asset address: ', IERC4626(address(args.wrappedToken)).asset());
 
         // _getWrappedTokenRate is scaled e18, so we may need to scale IERC4626.convertToAssets()
         uint256 wrappedTokenDecimals = ERC20(address(args.wrappedToken)).decimals();

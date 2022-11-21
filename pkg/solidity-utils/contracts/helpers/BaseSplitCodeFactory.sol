@@ -17,8 +17,6 @@ pragma experimental ABIEncoderV2;
 
 import "./CodeDeployer.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @dev Base factory for contracts whose creation code is so large that the factory cannot hold it. This happens when
  * the contract's creation code grows close to 24kB.
@@ -177,8 +175,6 @@ abstract contract BaseSplitCodeFactory {
         assembly {
             destination := create(0, add(creationCode, 32), mload(creationCode))
         }
-
-        console.log('destination: ', destination);
 
         if (destination == address(0)) {
             // Bubble up inner revert reason

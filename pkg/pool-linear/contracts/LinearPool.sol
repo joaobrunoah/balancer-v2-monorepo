@@ -31,8 +31,6 @@ import "@balancer-labs/v2-solidity-utils/contracts/math/FixedPoint.sol";
 
 import "./LinearMath.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @dev Linear Pools are designed to hold two assets: "main" and "wrapped" tokens that have an equal value underlying
  * token (e.g., DAI and waDAI). There must be an external feed available to provide an exact, non-manipulable exchange
@@ -154,32 +152,25 @@ abstract contract LinearPool is ILinearPool, IGeneralPool, IRateProvider, NewBas
             owner
         )
     {
-        console.log('here LP');
-
         // Set tokens
         _mainToken = mainToken;
         _wrappedToken = wrappedToken;
-        console.log('here LP 2');
 
         // Set token indexes. BPT is always 0; other tokens follow in sorted order.
         _mainIndex = mainToken < wrappedToken ? 1 : 2;
         _wrappedIndex = mainToken < wrappedToken ? 2 : 1;
-        console.log('here LP 3');
 
         // Set scaling factors
         _scalingFactorMainToken = _computeScalingFactor(mainToken);
         _scalingFactorWrappedToken = _computeScalingFactor(wrappedToken);
-        console.log('here LP 4');
 
         // Set initial targets. The lower target must be set to zero because initially there are no accumulated fees.
         // Otherwise the pool would owe fees from the start, which would make the rate manipulable.
         uint256 lowerTarget = 0;
         _setTargets(mainToken, lowerTarget, upperTarget);
-        console.log('here LP 5');
 
         // Set the initial swap fee percentage.
         _setSwapFeePercentage(swapFeePercentage);
-        console.log('here LP 6');
     }
 
     /**
