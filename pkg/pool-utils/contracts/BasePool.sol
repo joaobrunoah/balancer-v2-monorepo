@@ -33,6 +33,8 @@ import "./BalancerPoolToken.sol";
 import "./BasePoolAuthorization.sol";
 import "./RecoveryMode.sol";
 
+import "hardhat/console.sol";
+
 // solhint-disable max-states-count
 
 /**
@@ -617,10 +619,14 @@ abstract contract BasePool is
         }
 
         // Tokens that don't implement the `decimals` method are not supported.
+        console.log('compute scaling factors');
+        console.log('decimals: ', ERC20(address(token)).decimals());
         uint256 tokenDecimals = ERC20(address(token)).decimals();
 
         // Tokens with more than 18 decimals are not supported.
         uint256 decimalsDifference = Math.sub(18, tokenDecimals);
+        console.log('decimalsDifference: ', decimalsDifference);
+        console.log('scalingFactor: ', FixedPoint.ONE * 10**decimalsDifference);
         return FixedPoint.ONE * 10**decimalsDifference;
     }
 
