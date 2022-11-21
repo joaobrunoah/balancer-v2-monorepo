@@ -21,18 +21,18 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
   const frxEth = '0x5E8422345238F34275888049021821E8E08CAa1f';
   const erc4626Token = '0xac3e018457b222d93114458476f3e3416abbe38f';
 
-  const USDC_SCALING = bn(1e12); // USDC has 6 decimals, so its scaling factor is 1e12
+  const FRXETH_SCALING = bn(1); // frxEth has 18 decimals, so its scaling factor is 1
 
-  const USDC_HOLDER = '0xa1f8a6807c402e4a15ef4eba36528a3fed24e577';
+  const FRXETH_HOLDER = '0xa1f8a6807c402e4a15ef4eba36528a3fed24e577';
 
   const SWAP_FEE_PERCENTAGE = fp(0.01); // 1%
 
   // The targets are set using 18 decimals, even if the token has fewer (as is the case for USDC);
-  const INITIAL_UPPER_TARGET = fp(1e3);
+  const INITIAL_UPPER_TARGET = fp(1e2);
 
   // The initial midpoint (upper target / 2) must be between the final lower and upper targets
-  const FINAL_LOWER_TARGET = fp(0.2e3);
-  const FINAL_UPPER_TARGET = fp(5e3);
+  const FINAL_LOWER_TARGET = fp(0.2e2);
+  const FINAL_UPPER_TARGET = fp(5e2);
 
   let pool: Contract;
   let poolId: string;
@@ -46,7 +46,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
   before('load signers', async () => {
     [, owner, other] = await getSigners();
 
-    holder = await impersonate(USDC_HOLDER, fp(100));
+    holder = await impersonate(FRXETH_HOLDER, fp(100));
   });
 
   before('setup contracts', async () => {
@@ -67,7 +67,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       const { lowerTarget, upperTarget } = await pool.getTargets();
 
       const { cash } = await vault.getPoolTokenInfo(poolId, frxEth);
-      const scaledCash = cash.mul(USDC_SCALING);
+      const scaledCash = cash.mul(FRXETH_SCALING);
 
       let fees;
       if (scaledCash.gt(upperTarget)) {
@@ -98,7 +98,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
         // The recipient of the rebalance call should get the fees that were collected (though there's some rounding
         // error in the main-wrapped conversion).
         expect(finalRecipientMainBalance.sub(initialRecipientMainBalance)).to.be.almostEqual(
-          fees.div(USDC_SCALING),
+          fees.div(FRXETH_SCALING),
           0.00001
         );
       } else {
@@ -109,7 +109,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       const mainInfo = await vault.getPoolTokenInfo(poolId, frxEth);
 
       const expectedMainBalance = lowerTarget.add(upperTarget).div(2);
-      expect(mainInfo.cash.mul(USDC_SCALING)).to.equal(expectedMainBalance);
+      expect(mainInfo.cash.mul(FRXETH_SCALING)).to.equal(expectedMainBalance);
       expect(mainInfo.managed).to.equal(0);
     });
   }
@@ -136,7 +136,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       // We're going to join with enough main token to bring the Pool above its upper target, which will let us later
       // rebalance.
 
-      const joinAmount = INITIAL_UPPER_TARGET.mul(2).div(USDC_SCALING);
+      const joinAmount = INITIAL_UPPER_TARGET.mul(2).div(FRXETH_SCALING);
 
       await vault
         .connect(holder)
@@ -148,10 +148,10 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
         );
 
       // Assert join amount - some fees will be collected as we're going over the upper target.
-      const excess = joinAmount.mul(USDC_SCALING).sub(INITIAL_UPPER_TARGET);
+      const excess = joinAmount.mul(FRXETH_SCALING).sub(INITIAL_UPPER_TARGET);
       const joinCollectedFees = excess.mul(SWAP_FEE_PERCENTAGE).div(FP_ONE);
 
-      const expectedBPT = joinAmount.mul(USDC_SCALING).sub(joinCollectedFees);
+      const expectedBPT = joinAmount.mul(FRXETH_SCALING).sub(joinCollectedFees);
       expect(await pool.balanceOf(holder.address)).to.equal(expectedBPT);
     });
 
@@ -168,7 +168,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       // rebalance.
 
       const { upperTarget } = await pool.getTargets();
-      const joinAmount = upperTarget.mul(5).div(USDC_SCALING);
+      const joinAmount = upperTarget.mul(5).div(FRXETH_SCALING);
 
       await vault
         .connect(holder)
@@ -189,10 +189,10 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       // rebalance.
 
       const { cash } = await vault.getPoolTokenInfo(poolId, frxEth);
-      const scaledCash = cash.mul(USDC_SCALING);
+      const scaledCash = cash.mul(FRXETH_SCALING);
       const { lowerTarget } = await pool.getTargets();
 
-      const exitAmount = scaledCash.sub(lowerTarget.div(3)).div(USDC_SCALING);
+      const exitAmount = scaledCash.sub(lowerTarget.div(3)).div(FRXETH_SCALING);
 
       await vault.connect(holder).swap(
         {
@@ -219,7 +219,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       const { lowerTarget, upperTarget } = await pool.getTargets();
       const midpoint = lowerTarget.add(upperTarget).div(2);
 
-      const joinAmount = midpoint.div(100).div(USDC_SCALING);
+      const joinAmount = midpoint.div(100).div(FRXETH_SCALING);
 
       await vault
         .connect(holder)
@@ -241,7 +241,7 @@ describeForkTest('ERC4626LinearPoolFactory', 'mainnet', 16015018, function () {
       const { lowerTarget, upperTarget } = await pool.getTargets();
       const midpoint = lowerTarget.add(upperTarget).div(2);
 
-      const exitAmount = midpoint.div(100).div(USDC_SCALING);
+      const exitAmount = midpoint.div(100).div(FRXETH_SCALING);
 
       await vault.connect(holder).swap(
         {
