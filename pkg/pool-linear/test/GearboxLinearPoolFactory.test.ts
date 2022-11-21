@@ -16,6 +16,7 @@ describe('GearboxLinearPoolFactory', function () {
   let vault: Vault, tokens: TokenList, factory: Contract;
   let creationTime: BigNumber, owner: SignerWithAddress;
   let mainToken: Token, wrappedTokenInstance: Contract, wrappedToken: Token;
+  let gearboxVault: Contract;
 
   const NAME = 'Balancer Linear Pool Token';
   const SYMBOL = 'LPT';
@@ -37,8 +38,9 @@ describe('GearboxLinearPoolFactory', function () {
     creationTime = await currentTimestamp();
 
     mainToken = await Token.create('USDC');
+    gearboxVault = await deploy('MockGearboxVault', { args: [mainToken.address] });
     wrappedTokenInstance = await deploy('MockGearboxDieselToken', {
-      args: ['dUSDC', 'dUSDC', 18, mainToken.address],
+      args: ['dUSDC', 'dUSDC', 6, gearboxVault.address],
     });
     wrappedToken = await Token.deployedAt(wrappedTokenInstance.address);
 

@@ -16,10 +16,13 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/IGearboxDieselToken.sol";
+import "@balancer-labs/v2-pool-utils/contracts/lib/ExternalCallLib.sol";
 
 import "../LinearPool.sol";
 
 contract GearboxLinearPool is LinearPool {
+    IGearboxVault private immutable _gearboxVault;
+
     struct ConstructorArgs {
         IVault vault;
         string name;
@@ -49,7 +52,9 @@ contract GearboxLinearPool is LinearPool {
             args.owner
         )
     {
-        _require(address(args.mainToken) == IGearboxDieselToken(address(args.wrappedToken)).underlyingAsset(), Errors.TOKENS_MISMATCH);
+        address gearboxVaultAddress = IGearboxDieselToken(address(args.wrappedToken)).owner();
+        _gearboxVault = IGearboxVault(gearboxVaultAddress);
+        _require(address(args.mainToken) == IGearboxVault(gearboxVaultAddress).underlyingToken(), Errors.TOKENS_MISMATCH);
     }
 
     function _toAssetManagerArray(ConstructorArgs memory args) private pure returns (address[] memory) {
@@ -67,11 +72,16 @@ contract GearboxLinearPool is LinearPool {
         // except avoiding storing relevant variables in storage for gas reasons.
         // solhint-disable-next-line max-line-length
         // see: https://github.com/aave/protocol-v2/blob/ac58fea62bb8afee23f66197e8bce6d79ecda292/contracts/protocol/tokenization/StaticATokenLM.sol#L255-L257
-        uint256 rate = IGearboxDieselToken(address(getWrappedToken())).getDieselRate_RAY();
-
-        // TODO Refactor this comment
-        // This function returns a 18 decimal fixed point number, but `rate` has 27 decimals (i.e. a 'ray' value)
-        // so we need to convert it.
-        return rate / 10**9;
+        try _gearboxVault.getDieselRate_RAY() returns (uint256 rate) {
+            // TODO Refactor this comment
+            // This function returns a 18 decimal fixed point number, but `rate` has 27 decimals (i.e. a 'ray' value)
+            // so we need to convert it.
+            return rate / 10**9;
+        } catch (bytes memory revertData) {
+            // By maliciously reverting here, Gearbox (or any other contract in the call stack) could trick the Pool into
+            // reporting invalid data to the query mechanism for swaps/joins/exits.
+            // We then check the revert data to ensure this doesn't occur.
+            ExternalCallLib.bubbleUpNonMaliciousRevert(revertData);
+        }
     }
 }

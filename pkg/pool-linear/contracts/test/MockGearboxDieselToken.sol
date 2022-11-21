@@ -19,43 +19,18 @@ import "@balancer-labs/v2-interfaces/contracts/pool-linear/IGearboxDieselToken.s
 import "@balancer-labs/v2-solidity-utils/contracts/test/TestToken.sol";
 
 contract MockGearboxDieselToken is TestToken, IGearboxDieselToken {
-    uint256 private _rate = 1e27;
-    address private immutable _ASSET;
+    IGearboxVault private immutable _gearboxVault;
 
     constructor(
         string memory name,
         string memory symbol,
         uint8 decimals,
-        address underlyingAsset
+        address gearboxVaultAddress
     ) TestToken(name, symbol, decimals) {
-        _ASSET = underlyingAsset;
+        _gearboxVault = IGearboxVault(gearboxVaultAddress);
     }
 
-    // solhint-disable-next-line func-name-mixedcase
-    function underlyingAsset() external view override returns (address) {
-        return _ASSET;
-    }
-
-    function getDieselRate_RAY() external view override returns (uint256) {
-        return _rate;
-    }
-
-    function setRate(uint256 rate) external {
-        _rate = rate;
-    }
-
-    function addLiquidity(
-        uint256,
-        address,
-        uint256
-    ) external pure override returns (uint256) {
-        return 0;
-    }
-
-    function removeLiquidity(
-        uint256,
-        address
-    ) external pure override returns (uint256, uint256) {
-        return (0, 0);
+    function owner() external view override returns (address) {
+        return address(_gearboxVault);
     }
 }

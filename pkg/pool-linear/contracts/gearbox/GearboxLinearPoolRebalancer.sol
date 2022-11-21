@@ -25,6 +25,7 @@ import "../LinearPoolRebalancer.sol";
 
 contract GearboxLinearPoolRebalancer is LinearPoolRebalancer {
     using SafeERC20 for IERC20;
+    using FixedPoint for uint256;
 
     // These Rebalancers can only be deployed from a factory to work around a circular dependency: the Pool must know
     // the address of the Rebalancer in order to register it, and the Rebalancer must know the address of the Pool
@@ -38,14 +39,16 @@ contract GearboxLinearPoolRebalancer is LinearPoolRebalancer {
     function _wrapTokens(uint256 amount) internal override {
         // No referral code, depositing from underlying (i.e. DAI, USDC, etc. instead of dDAI or dUSDC). Before we can
         // deposit however, we need to approve the wrapper in the underlying token.
-        _mainToken.safeApprove(address(_wrappedToken), amount);
-        IGearboxDieselToken(address(_wrappedToken)).addLiquidity(amount, address(this), 0);
+        IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
+        _mainToken.safeApprove(address(gearboxVault), amount);
+        gearboxVault.addLiquidity(amount, address(this), 0);
     }
 
     function _unwrapTokens(uint256 amount) internal override {
         // Withdrawing into underlying (i.e. DAI, USDC, etc. instead of dDAI or dUSDC). Approvals are not necessary here
         // as the wrapped token is simply burnt.
-        IGearboxDieselToken(address(_wrappedToken)).removeLiquidity(amount, address(this));
+        IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
+        gearboxVault.removeLiquidity(amount, address(this));
     }
 
     function _getRequiredTokensToWrap(uint256 wrappedAmount) internal view override returns (uint256) {
@@ -54,8 +57,13 @@ contract GearboxLinearPoolRebalancer is LinearPoolRebalancer {
         // divisions and multiplications with rounding involved, this value might be off by one. We add one to ensure
         // the returned value will always be enough to get `wrappedAmount` when unwrapping. This might result in some
         // dust being left in the Rebalancer.
-        uint256 rate = IGearboxDieselToken(address(_wrappedToken)).getDieselRate_RAY();
-        uint256 fixedRate = rate / 10**9;
-        return wrappedAmount * fixedRate / FixedPoint.ONE;
+        IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
+        uint256 rate = gearboxVault.getDieselRate_RAY();
+        return (wrappedAmount.mulDown(rate) / 10**9) + 1;
+    }
+
+    function getGearboxVault(address dieselTokenAddress) private view returns (IGearboxVault) {
+        address gearboxVaultAddress = IGearboxDieselToken(dieselTokenAddress).owner();
+        return IGearboxVault(gearboxVaultAddress);
     }
 }

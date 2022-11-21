@@ -16,10 +16,18 @@ pragma solidity >=0.7.0 <0.9.0;
 
 interface IGearboxDieselToken {
     /**
+     * @dev returns the address of the vault
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function owner() external view returns (address);
+}
+
+interface IGearboxVault {
+    /**
      * @dev returns the address of the underlying asset
      */
     // solhint-disable-next-line func-name-mixedcase
-    function underlyingAsset() external view returns (address);
+    function underlyingToken() external view returns (address);
 
     /**
      * @dev returns a 27 decimal fixed point 'ray' value so a rate of 1 is represented as 1e27
@@ -30,10 +38,10 @@ interface IGearboxDieselToken {
         uint256,
         address,
         uint256
-    ) external returns (uint256);
+    ) external;
 
     function removeLiquidity(
         uint256,
         address
-    ) external returns (uint256, uint256);
+    ) external;
 }
