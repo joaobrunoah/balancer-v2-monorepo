@@ -33,6 +33,11 @@ interface IGearboxVault {
     // solhint-disable-next-line func-name-mixedcase
     function getDieselRate_RAY() external view returns (uint256);
 
+    /**
+     * @dev converts diesel token amount to main token amount
+     */
+    function fromDiesel(uint256) external view returns (uint256);
+
     function addLiquidity(uint256, address, uint256) external;
 
     function removeLiquidity(uint256, address) external;

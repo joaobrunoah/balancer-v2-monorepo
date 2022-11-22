@@ -17,8 +17,11 @@ pragma solidity ^0.7.0;
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/IGearboxDieselToken.sol";
 
 import "@balancer-labs/v2-solidity-utils/contracts/test/TestToken.sol";
+import "@balancer-labs/v2-solidity-utils/contracts/math/FixedPoint.sol";
 
 contract MockGearboxVault is IGearboxVault {
+    using FixedPoint for uint256;
+
     uint256 private _rate = 1e27;
     address private immutable _ASSET;
 
@@ -39,6 +42,10 @@ contract MockGearboxVault is IGearboxVault {
 
     function setRate(uint256 rate) external {
         _rate = rate;
+    }
+
+    function fromDiesel(uint256 amountDiesel) external view override returns (uint256){
+        return amountDiesel.mulDown(_rate) / 10**9;
     }
 
     function addLiquidity(
