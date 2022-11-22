@@ -28,7 +28,12 @@ import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.
 import "./GearboxLinearPool.sol";
 import "./GearboxLinearPoolRebalancer.sol";
 
-contract GearboxLinearPoolFactory is ILastCreatedPoolFactory, BasePoolFactory, ReentrancyGuard, FactoryWidePauseWindow {
+contract GearboxLinearPoolFactory is
+    ILastCreatedPoolFactory,
+    BasePoolFactory,
+    ReentrancyGuard,
+    FactoryWidePauseWindow
+{
     // Used for create2 deployments
     uint256 private _nextRebalancerSalt;
 
@@ -67,19 +72,20 @@ contract GearboxLinearPoolFactory is ILastCreatedPoolFactory, BasePoolFactory, R
         uint256 swapFeePercentage,
         address owner
     ) external nonReentrant returns (GearboxLinearPool) {
-        // We are going to deploy both an GearboxLinearPool and an GearboxLinearPoolRebalancer set as its Asset Manager, but
-        // this creates a circular dependency problem: the Pool must know the Asset Manager's address in order to call
-        // `IVault.registerTokens` with it, and the Asset Manager must know about the Pool in order to store its Pool
-        // ID, wrapped and main tokens, etc., as immutable variables.
-        // We could forego immutable storage in the Rebalancer and simply have a two-step initialization process that
-        // uses storage, but we can keep those gas savings by instead making the deployment a bit more complicated.
+        // We are going to deploy both an GearboxLinearPool and an GearboxLinearPoolRebalancer set as its Asset
+        // Manager, but this creates a circular dependency problem: the Pool must know the Asset Manager's address
+        // in order to call `IVault.registerTokens` with it, and the Asset Manager must know about the Pool in order
+        // to store its Pool ID, wrapped and main tokens, etc., as immutable variables. We could forego immutable
+        // storage in the Rebalancer and simply have a two-step initialization process that uses storage, but we
+        // can keep those gas savings by instead making the deployment a bit more complicated.
         //
         // Note that the Pool does not interact with the Asset Manager: it only needs to know about its address.
-        // We therefore use create2 to deploy the Asset Manager, first computing the address where it will be deployed.
-        // With that knowledge, we can then create the Pool, and finally the Asset Manager. The only issue with this
-        // approach is that create2 requires the full creation code, including constructor arguments, and among those is
-        // the Pool's address. To work around this, we have the Rebalancer fetch this address from `getLastCreatedPool`,
-        // which will hold the Pool's address after we call `_create`.
+        // We therefore use create2 to deploy the Asset Manager, first computing the address where it will be
+        // deployed. With that knowledge, we can then create the Pool, and finally the Asset Manager. The only issue
+        // with this approach is that create2 requires the full creation code, including constructor arguments, and
+        // among those is the Pool's address. To work around this, we have the Rebalancer fetch this address from
+        // `getLastCreatedPool`, which will hold the Pool's address after we call `_create`.
+
 
         bytes32 rebalancerSalt = bytes32(_nextRebalancerSalt);
         _nextRebalancerSalt += 1;
@@ -112,12 +118,13 @@ contract GearboxLinearPoolFactory is ILastCreatedPoolFactory, BasePoolFactory, R
         // ensure deployment and initialization are atomic.
         pool.initialize();
 
-        // Not that the Linear Pool's deployment is complete, we can deploy the Rebalancer, verifying that we correctly
-        // predicted its deployment address.
+        // Not that the Linear Pool's deployment is complete, we can deploy the Rebalancer, verifying that we
+        // correctly predicted its deployment address.
         address actualRebalancerAddress = Create2.deploy(0, rebalancerSalt, rebalancerCreationCode);
         require(expectedRebalancerAddress == actualRebalancerAddress, "Rebalancer deployment failed");
 
-        // We don't return the Rebalancer's address, but that can be queried in the Vault by calling `getPoolTokenInfo`.
+        // We don't return the Rebalancer's address, but that can be queried in the Vault by calling
+        // `getPoolTokenInfo`.
         return pool;
     }
 }

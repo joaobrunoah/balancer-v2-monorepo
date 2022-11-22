@@ -54,7 +54,10 @@ contract GearboxLinearPool is LinearPool {
     {
         address gearboxVaultAddress = IGearboxDieselToken(address(args.wrappedToken)).owner();
         _gearboxVault = IGearboxVault(gearboxVaultAddress);
-        _require(address(args.mainToken) == IGearboxVault(gearboxVaultAddress).underlyingToken(), Errors.TOKENS_MISMATCH);
+        _require(
+            address(args.mainToken) == IGearboxVault(gearboxVaultAddress).underlyingToken(),
+            Errors.TOKENS_MISMATCH
+        );
     }
 
     function _toAssetManagerArray(ConstructorArgs memory args) private pure returns (address[] memory) {
@@ -72,12 +75,12 @@ contract GearboxLinearPool is LinearPool {
         // For updated list of pools and tokens, please check:
         // https://dev.gearbox.fi/docs/documentation/deployments/deployed-contracts
         try _gearboxVault.getDieselRate_RAY() returns (uint256 rate) {
-            // This function returns a 18 decimal fixed point number, but `getDieselRate_RAY` has 27 decimals (i.e. a 'ray' value)
-            // so we need to convert it.
+            // This function returns a 18 decimal fixed point number, but `getDieselRate_RAY` has 27 decimals
+            // (i.e. a 'ray' value) so we need to convert it.
             return rate / 10**9;
         } catch (bytes memory revertData) {
-            // By maliciously reverting here, Gearbox (or any other contract in the call stack) could trick the Pool into
-            // reporting invalid data to the query mechanism for swaps/joins/exits.
+            // By maliciously reverting here, Gearbox (or any other contract in the call stack) could trick the
+            // Pool into reporting invalid data to the query mechanism for swaps/joins/exits.
             // We then check the revert data to ensure this doesn't occur.
             ExternalCallLib.bubbleUpNonMaliciousRevert(revertData);
         }

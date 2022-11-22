@@ -39,7 +39,7 @@ contract GearboxLinearPoolRebalancer is LinearPoolRebalancer {
     function _wrapTokens(uint256 amount) internal override {
         // No referral code, depositing from underlying (i.e. DAI, USDC, etc. instead of dDAI or dUSDC). Before we can
         // deposit however, we need to approve the wrapper in the underlying token.
-        IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
+        IGearboxVault gearboxVault = _getGearboxVault(address(_wrappedToken));
         _mainToken.safeApprove(address(gearboxVault), amount);
         gearboxVault.addLiquidity(amount, address(this), 0);
     }
@@ -47,24 +47,22 @@ contract GearboxLinearPoolRebalancer is LinearPoolRebalancer {
     function _unwrapTokens(uint256 amount) internal override {
         // Withdrawing into underlying (i.e. DAI, USDC, etc. instead of dDAI or dUSDC). Approvals are not necessary here
         // as the wrapped token is simply burnt.
-        IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
+        IGearboxVault gearboxVault = _getGearboxVault(address(_wrappedToken));
         gearboxVault.removeLiquidity(amount, address(this));
     }
 
     function _getRequiredTokensToWrap(uint256 wrappedAmount) internal view override returns (uint256) {
-        IGearboxVault gearboxVault = getGearboxVault(address(_wrappedToken));
-        // see: https://etherscan.io/address/0x86130bDD69143D8a4E5fc50bf4323D48049E98E4#readContract#F18
-        // The getDieselRate_RAY function doesn't appear on gearbox docs, but is easy to find in etherscan.io
+        IGearboxVault gearboxVault = _getGearboxVault(address(_wrappedToken));
+        // see: https://etherscan.io/address/0x86130bDD69143D8a4E5fc50bf4323D48049E98E4#readContract#F17
         // For updated list of pools and tokens, please check:
         // https://dev.gearbox.fi/docs/documentation/deployments/deployed-contracts
-        uint256 rate = gearboxVault.getDieselRate_RAY();
         // Since there's fixed point divisions and multiplications with rounding involved, this value might
         // be off by one. We add one to ensure the returned value will always be enough to get `wrappedAmount`
         // when unwrapping. This might result in some dust being left in the Rebalancer.
-        return (wrappedAmount.mulDown(rate) / 10**9) + 1;
+        return gearboxVault.fromDiesel(wrappedAmount) + 1;
     }
 
-    function getGearboxVault(address dieselTokenAddress) private view returns (IGearboxVault) {
+    function _getGearboxVault(address dieselTokenAddress) private view returns (IGearboxVault) {
         address gearboxVaultAddress = IGearboxDieselToken(dieselTokenAddress).owner();
         return IGearboxVault(gearboxVaultAddress);
     }

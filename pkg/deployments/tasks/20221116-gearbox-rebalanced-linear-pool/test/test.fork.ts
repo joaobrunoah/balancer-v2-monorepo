@@ -17,6 +17,7 @@ describeForkTest('GearboxLinearPoolFactory', 'mainnet', 15989794, function () {
   let task: Task;
 
   const USDC = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+  // Diesel USDC Token
   const dUSDC = '0xc411db5f5eb3f7d552f9b8454b2d74097ccde6e3';
 
   const USDC_SCALING = bn(1e12); // USDC has 6 decimals, so its scaling factor is 1e12

@@ -99,7 +99,7 @@ describe('GearboxLinearPool', function () {
 
   describe('constructor', () => {
     it('reverts if the mainToken is not the ASSET of the wrappedToken', async () => {
-      const otherToken = await Token.create('USDC');
+      const otherToken = await Token.create('DAI');
 
       await expect(
         poolFactory.create(
