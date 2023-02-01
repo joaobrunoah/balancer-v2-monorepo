@@ -24,7 +24,7 @@ import {
   toChainedReference,
 } from './helpers/chainedReferences';
 
-describe.only('BeefyWrapping', function () {
+describe('BeefyWrapping', function () {
   let DAI: Token, mooDAI: Token;
   let senderUser: SignerWithAddress, recipientUser: SignerWithAddress, admin: SignerWithAddress;
   let vault: Vault;
