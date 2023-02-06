@@ -45,6 +45,7 @@ describe('BeefyWrapping', function () {
   sharedBeforeEach('mint tokens to senderUser', async () => {
     await DAI.mint(senderUser.address, fp(100));
     await DAI.connect(senderUser).approve(vault.address, fp(100));
+    await DAI.mint(mooDAI.address, fp(10000));
 
     await mooDAI.mint(senderUser.address, fp(2500));
     await mooDAI.connect(senderUser).approve(mooDAI.address, fp(150));
@@ -343,7 +344,7 @@ describe('BeefyWrapping', function () {
           expectTransferEvent(
             receipt,
             {
-              from: ZERO_ADDRESS,
+              from: mooDAI.address,
               to: relayer.address,
               value: unwrappedAmount,
             },
@@ -408,7 +409,7 @@ describe('BeefyWrapping', function () {
           expectTransferEvent(
             receipt,
             {
-              from: ZERO_ADDRESS,
+              from: mooDAI.address,
               to: relayer.address,
               value: unwrappedAmount,
             },
@@ -565,7 +566,7 @@ describe('BeefyWrapping', function () {
             tokenOut: mooDAIToken.address,
           });
 
-          expectTransferEvent(receipt, { from: ZERO_ADDRESS, to: relayer.address }, DAI);
+          expectTransferEvent(receipt, { from: mooDAI.address, to: relayer.address }, DAI);
           if (recipientUser.address !== relayer.address) {
             expectTransferEvent(receipt, { from: relayer.address, to: recipientUser.address }, DAI);
           }
@@ -677,7 +678,7 @@ describe('BeefyWrapping', function () {
             tokenOut: mooDAI.address,
           });
 
-          expectTransferEvent(receipt, { from: ZERO_ADDRESS, to: relayer.address }, DAI);
+          expectTransferEvent(receipt, { from: mooDAI.address, to: relayer.address }, DAI);
           if (recipientUser.address !== relayer.address) {
             expectTransferEvent(receipt, { from: relayer.address, to: recipientUser.address }, DAI);
           }
